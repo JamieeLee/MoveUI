@@ -194,11 +194,9 @@ MoveAnything_DefaultFrameList = {
 	{ "MainMenuBarMaxLevelBar", "Max Level Bar" },
 	{ "MainMenuExpBar", "Experience Bar" },
 
-	{ "Separator", "**** Bag and Micro Button Bars ****" },
+	{ "Separator", "**** Bag Buttons ****" },
 	{ "BagButtonsMover", "Bag Buttons" },
 	{ "BagButtonsVerticalMover", "Bag Buttons (Vertical)" },
-	{ "MicroButtonsMover", "Micro Buttons" },
-	{ "MicroButtonsVerticalMover", "Micro Buttons (Vertical)" },
 
 	{ "Separator", "**** Minimap ****" },
 	{ "MinimapCluster", "MiniMap" },
