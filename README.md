@@ -4,7 +4,7 @@
 
 Move UI adapts the classic MoveAnything-style interface for Azeroth Survivors, focusing on moving supported interface frames while removing obsolete World of Warcraft features that the game does not use.
 
-![Move UI in Azeroth Survivors](assets/move-ui-preview.png)
+![Move UI in Azeroth Survivors](move-ui-preview.png)
 
 ## Current status
 
