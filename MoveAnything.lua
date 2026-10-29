@@ -67,52 +67,15 @@ function MoveAnything_ToggleVisibilityOnFrame(frame)
 
 end
 
-function TestPos( frame, x, y )
-	frame:ClearAllPoints();
-	if( frame.HiddenSetPoint ) then
-		frame:HiddenSetPoint( "BOTTOMLEFT", frame:GetParent():GetName(), "BOTTOMLEFT", x, y );
-	else
-		frame:SetPoint( "BOTTOMLEFT", frame:GetParent():GetName(), "BOTTOMLEFT", x, y );
-	end
-end
+-- The old ad-hoc debug commands and MALocator helper were unused by the addon UI.
 
-function TestInfo()
-	Print( "PlayerFrame "..PlayerFrame:GetLeft()..", "..PlayerFrame:GetBottom().." ("..PlayerFrame:GetScale()..")" );
-	Print( "PetFrame "..PetFrame:GetLeft()..", "..PetFrame:GetBottom().." ("..PetFrame:GetScale()..")" );
-end
+local MoveAnythingAS_LoginRefreshPending = false
+local MoveAnythingAS_LoginRefreshElapsed = 0
 
-function ListFrameOptions()
-	local count = 0;
-	for i, v in MoveAnything_FrameOptions do
-		count = count + 1;
-	end
-	Print( count.." frame options" );
-	for i, v in MoveAnything_FrameOptions do
-		Print( "FrameOptions: "..v.name );
-	end
-end
-
-function ListCustomFrames()
-	Print( table.getn( MoveAnything_CustomFrames ).." custom frames" );
-	for i, v in MoveAnything_CustomFrames do
-		Print( v.name );
-	end
-end
-
-function MADebOpt( frameName )
-	for i, v in MoveAnything_FrameOptions[ frameName ] do
-		Print( frameName.."."..i.." = "..tostring(v) );
-	end
-end
-
-function MADeb()
-	ListCustomFrames();
-	ListFrameOptions();
-end
-
-function MALocate()
-	if( not MALocator:IsVisible() ) then
-		MALocator:Show();
+function MoveAnythingUpdater_OnEvent()
+	if event == "PLAYER_LOGIN" then
+		MoveAnythingAS_LoginRefreshPending = true
+		MoveAnythingAS_LoginRefreshElapsed = 0
 	end
 end
 
@@ -120,6 +83,20 @@ function MoveAnythingUpdater_OnUpdate(arg1)
 	if MoveAnythingUpdater:GetScale() == UIParent:GetScale() then
 		MoveAnythingUpdater:SetScale(0.2)
 		MoveAnything_RefreshPositions()
+	end
+
+	-- LocalClock creates LocalClockFrame at PLAYER_LOGIN. If that frame exists,
+	-- reapply saved Move UI positions once so its own initial placement cannot
+	-- overwrite the position saved by Move UI on the previous session.
+	if MoveAnythingAS_LoginRefreshPending then
+		MoveAnythingAS_LoginRefreshElapsed = MoveAnythingAS_LoginRefreshElapsed + (arg1 or 0)
+		if LocalClockFrame then
+			MoveAnything_RefreshPositions()
+			MoveAnythingAS_LoginRefreshPending = false
+		elseif MoveAnythingAS_LoginRefreshElapsed >= 10 then
+			-- Do not keep polling forever if LocalClock is not installed.
+			MoveAnythingAS_LoginRefreshPending = false
+		end
 	end
 end
 
@@ -132,6 +109,8 @@ MoveAnything_FrameOptions = nil;
 
 MoveAnything_NoScale = { TooltipMover = true, FramerateMover = true };
 MoveAnything_ScaleWH = { MainMenuExpBar = true };
+-- Keep the two gargoyles on the MainMenuBar-relative path. Their visible
+-- artwork is laid out against MainMenuBar in Azeroth Survivors.
 MoveAnything_DetachFromParent = { MainMenuBarPerformanceBarFrame = true };
 MoveAnything_NoHide = { MAOptions = true };
 MoveAnything_HideList = {};
@@ -183,28 +162,23 @@ MoveAnything_DefaultFrameList = {
 
 	{ "Separator", "**** Bags ****" },
 	{ "BagFrame1", "Bag 1 (Backpack)" },
-	{ "BagFrame2", "Bag 2" },
-	{ "BagFrame3", "Bag 3" },
-	{ "BagFrame4", "Bag 4" },
-	{ "BagFrame5", "Bag 5" },
 
 	{ "Separator", "**** Bottom Bar ****" },
-	{ "MainMenuBar", "Bottom Bar" },
+	{ "MainMenuBar", "Main bar (whole)" },
+	{ "MainMenuExpBar", "Experience bar" },
+	{ "MainMenuBarLeftEndCap", "Left gargoyle" },
+	{ "MainMenuBarRightEndCap", "Right gargoyle" },
 	-- MainMenuBarArtFrame intentionally omitted: moving this stock artwork freezes Azeroth Survivors.
-	{ "MainMenuBarMaxLevelBar", "Max Level Bar" },
-	{ "MainMenuExpBar", "Experience Bar" },
-
-	{ "Separator", "**** Bag Buttons ****" },
-	{ "BagButtonsMover", "Bag Buttons" },
-	{ "BagButtonsVerticalMover", "Bag Buttons (Vertical)" },
+	{ "BasicActionButtonsMover", "Spell buttons" },
+	{ "MicroButtonsMover", "Character and talent buttons" },
 
 	{ "Separator", "**** Minimap ****" },
 	{ "MinimapCluster", "MiniMap" },
 	{ "MinimapZoneTextButton", "MiniMap Zone Text" },
 	{ "MinimapZoomIn", "MiniMap Zoom In Button" },
 	{ "MinimapZoomOut", "MiniMap Zoom Out Button" },
-	{ "MiniMapMailFrame", "MiniMap Mail Notification" },
 	{ "MiniMapTrackingFrame", "MiniMap Tracking" },
+	{ "GameTimeFrame", "MiniMap Day-Night Clock" },
 
 	{ "Separator", "**** Miscellaneous Screen Items ****" },
 	{ "StaticPopup1", "Static Popup Frame" },
@@ -214,7 +188,7 @@ MoveAnything_DefaultFrameList = {
 	{ "TemporaryEnchantFrame", "Item buff/Debuff Windows" },
 	{ "TooltipMover", "Tooltip" },
 	{ "FramerateMover", "Move FPS" },
-	{ "DurabilityFrame", "Durability Damage Portrait" },
+	{ "LocalClockFrame", "Local Clock" },
 	{ "QuestWatchFrame", "Quest Tracker" },
 	{ "QuestTimerFrame", "Quest Timer" },
 	{ "ComboFrame", "Rogue Combo point counter" },
@@ -265,16 +239,40 @@ function MAGetParent( frame )
 	return frame:GetParent();
 end
 
+-- The end caps' visible layout is relative to MainMenuBar even though
+-- GetParent() may report UIParent. Keep capture, mover, saved position and
+-- reset calculations on this same reference to preserve the native layout.
+function MoveAnything_GetPositionParent( frame )
+	if ( frame and frame.GetName ) then
+		local name = frame:GetName();
+		if ( name == "MainMenuBarLeftEndCap" or name == "MainMenuBarRightEndCap" ) then
+			return MainMenuBar;
+		end
+	end
+	return MAGetParent( frame );
+end
+
 function MAGetScale( frame, effective )
-	if( frame:GetScale() == nil ) then
+	-- Some Azeroth Survivors UI objects are not full WoW Frames and do not
+	-- expose GetScale/GetEffectiveScale. Treat those as normal UI scale.
+	if ( not frame or not frame.GetScale ) then
 		return 1;
 	end
 
-	if ( effective ) then
-		return frame:GetEffectiveScale();
-	else
-		return frame:GetScale();
+	local scale = frame:GetScale();
+	if ( scale == nil ) then
+		scale = 1;
 	end
+
+	if ( effective ) then
+		if ( frame.GetEffectiveScale ) then
+			local effectiveScale = frame:GetEffectiveScale();
+			if ( effectiveScale ~= nil ) then
+				return effectiveScale;
+			end
+		end
+	end
+	return scale;
 end
 
 function MoveAnything_RefreshPositions()
@@ -293,7 +291,7 @@ function MoveAnything_RefreshPositions()
 				if( MoveAnything_DetachFromParent[ opt.name ] ) then
 					parent = UIParent;
 				else
-					parent = MAGetParent( frame );
+					parent = MoveAnything_GetPositionParent( frame );
 				end
 				frame:HiddenClearAllPoints();
 				frame:HiddenSetPoint( "BOTTOMLEFT", parent:GetName(), "BOTTOMLEFT", opt.x, opt.y );
@@ -831,12 +829,12 @@ function MoveAnything_UpdatePosition( moveFrame )
 	parent = nil;
 	if( moveFrame.tagged ) then
 		if( MoveAnything_DetachFromParent[ moveFrame.tagged:GetName() ] ) then
-			x = moveFrame.tagged:GetLeft();
-			y = moveFrame.tagged:GetBottom();
+			x = moveFrame:GetLeft();
+			y = moveFrame:GetBottom();
 			parent = UIParent;
 		else
 			x, y = MoveAnything_GetRelativeBottomLeft( moveFrame.tagged );
-			parent = MAGetParent( moveFrame.tagged );
+			parent = MoveAnything_GetPositionParent( moveFrame.tagged );
 		end
 		local opt = MoveAnything_FindFrameOptions( moveFrame.tagged:GetName(), "UpdatePosition" );
 		opt.x = x;
@@ -926,10 +924,20 @@ function MoveAnything_OnSizeChanged( this )
 					opt.scale = s;
 				end
 
-				this.tagged:HiddenSetScale( s );
+				-- Some Azeroth Survivors frames do not implement SetScale.
+				-- PreventExternalMovement cannot save a missing method as HiddenSetScale.
+				if this.tagged.HiddenSetScale then
+					this.tagged:HiddenSetScale( s );
+				elseif this.tagged.SetScale then
+					this.tagged:SetScale( s );
+				end
 				if( this.tagged.attachedChildren ) then
 					for i, v in this.tagged.attachedChildren do
-						v:HiddenSetScale( s );
+						if v.HiddenSetScale then
+							v:HiddenSetScale( s );
+						elseif v.SetScale then
+							v:SetScale( s );
+						end
 					end
 				end
 			end
@@ -939,32 +947,16 @@ function MoveAnything_OnSizeChanged( this )
 	end
 end
 
-function MoveAnything_GetParentScaleRatio( frame )
-	return MAGetScale( frame, 1 );
-end
-
---[[
 function MoveAnything_GetRelativeBottomLeft( tagFrame )
 	x = tagFrame:GetLeft();
 	if( x ) then
-		x = x - MAGetParent( tagFrame ):GetLeft() * MAGetScale( tagFrame );
+		local positionParent = MoveAnything_GetPositionParent( tagFrame );
+		x = x - positionParent:GetLeft() * MAGetScale( positionParent ) / MAGetScale( tagFrame );
 	end
 	y = tagFrame:GetBottom();
 	if( y ) then
-		y = y - MAGetParent( tagFrame ):GetBottom() * MAGetScale( tagFrame );
-	end
-	return x,y;
-end
-]]
-
-function MoveAnything_GetRelativeBottomLeft( tagFrame )
-	x = tagFrame:GetLeft();
-	if( x ) then
-		x = x - MAGetParent( tagFrame ):GetLeft() * MAGetScale( MAGetParent( tagFrame ) ) / MAGetScale( tagFrame );
-	end
-	y = tagFrame:GetBottom();
-	if( y ) then
-		y = y - MAGetParent( tagFrame ):GetBottom() * MAGetScale( MAGetParent( tagFrame ) ) / MAGetScale( tagFrame );
+		local positionParent = MoveAnything_GetPositionParent( tagFrame );
+		y = y - positionParent:GetBottom() * MAGetScale( positionParent ) / MAGetScale( tagFrame );
 	end
 	return x,y;
 end
@@ -986,18 +978,29 @@ function MoveAnything_Attach( moveFrame, tagFrame )
 		end
 	end
 
-	local x, y;
+	local x, y, moverParent;
 	if( tagFrame:GetLeft() == nil ) then tagFrame:Show(); tagFrame:Hide(); end
-	x = tagFrame:GetLeft() * MAGetScale( tagFrame, 1 ) / UIParent:GetScale();
-	x = x - MAGetParent( tagFrame ):GetLeft() * MAGetScale( MAGetParent( tagFrame ), 1 ) / UIParent:GetScale();
-	
-	y = tagFrame:GetBottom() * MAGetScale( tagFrame, 1 ) / UIParent:GetScale();
-	y = y - MAGetParent( tagFrame ):GetBottom() * MAGetScale( MAGetParent( tagFrame ), 1 ) / UIParent:GetScale();
+	if( MoveAnything_DetachFromParent[ tagFrame:GetName() ] ) then
+		x = tagFrame:GetLeft() * MAGetScale( tagFrame, 1 ) / UIParent:GetScale();
+		y = tagFrame:GetBottom() * MAGetScale( tagFrame, 1 ) / UIParent:GetScale();
+		moverParent = UIParent;
+	else
+		moverParent = MoveAnything_GetPositionParent( tagFrame );
+		x = tagFrame:GetLeft() * MAGetScale( tagFrame, 1 ) / UIParent:GetScale();
+		x = x - moverParent:GetLeft() * MAGetScale( moverParent, 1 ) / UIParent:GetScale();
+		y = tagFrame:GetBottom() * MAGetScale( tagFrame, 1 ) / UIParent:GetScale();
+		y = y - moverParent:GetBottom() * MAGetScale( moverParent, 1 ) / UIParent:GetScale();
+	end
 
 	moveFrame:ClearAllPoints();
-	moveFrame:SetPoint( "BOTTOMLEFT", MAGetParent( tagFrame ):GetName(), "BOTTOMLEFT", x, y );
+	moveFrame:SetPoint( "BOTTOMLEFT", moverParent:GetName(), "BOTTOMLEFT", x, y );
 	moveFrame:SetWidth( tagFrame:GetWidth() * MAGetScale( tagFrame , 1 ) / UIParent:GetScale() );
-	moveFrame:SetHeight( tagFrame:GetHeight() * MAGetScale( tagFrame, 1 ) / UIParent:GetScale() );	moveFrame:SetFrameLevel( tagFrame:GetFrameLevel() + 1 );
+	moveFrame:SetHeight( tagFrame:GetHeight() * MAGetScale( tagFrame, 1 ) / UIParent:GetScale() );
+	-- Azeroth Survivors UI frames may not expose GetFrameLevel; mirror the
+	-- original MoveAnything compatibility guard instead of assuming the method exists.
+	if tagFrame.GetFrameLevel then
+		moveFrame:SetFrameLevel( tagFrame:GetFrameLevel() + 1 );
+	end
 	tagFrame:HiddenClearAllPoints();
 	tagFrame:HiddenSetPoint( "BOTTOMLEFT", moveFrame:GetName(), "BOTTOMLEFT", 0, 0 );
 
@@ -1029,7 +1032,6 @@ function MoveAnything_ResetFrameOptions( frameName )
 	local opt = MoveAnything_FindFrameOptions( frameName, "Reset Frame Options" );
 	local left = nil;
 	local bottom = nil;
-	local hidden = false;
 	local width = nil;
 	local height = nil;
 	if( opt ) then
@@ -1043,13 +1045,13 @@ function MoveAnything_ResetFrameOptions( frameName )
 		end
 	end
 	frame:ClearAllPoints();
-	frame:SetPoint( "BOTTOMLEFT", MAGetParent( frame ):GetName(), "BOTTOMLEFT", left, bottom );
-	if( MoveAnything_ScaleAllowed( frame:GetName() ) ) then
+	frame:SetPoint( "BOTTOMLEFT", MoveAnything_GetPositionParent( frame ):GetName(), "BOTTOMLEFT", left, bottom );
+	if( opt and MoveAnything_ScaleAllowed( frame:GetName() ) and opt.originalScale ) then
 		frame:SetScale( opt.originalScale );
 	end
 	if( width ) then frame:SetWidth( width ); end
 	if( height ) then frame:SetHeight( height ); end
-	if( frame.attachedChildren ) then
+	if( opt and opt.originalScale and frame.attachedChildren ) then
 		for i, v in frame.attachedChildren do
 			if( MoveAnything_ScaleAllowed( frame:GetName() ) ) then
 				v:SetScale( opt.originalScale );
@@ -1305,10 +1307,6 @@ function MoveAnythingOptions_Update()
 	end
 end
 
-function FuckMe()
-	MoveAnything_FrameOptions = {};
-end
-
 function MoveAnythingOptions_ResetAll()
 	for i,v in MoveAnything_FrameOptions do
 		MoveAnything_ResetFrameOptions( v.name );
@@ -1435,17 +1433,10 @@ end
 -- TALENT BUTTON HOOK
 MoveAnything_OriginalUpdateTalentButton = UpdateTalentButton;
 function UpdateTalentButton()
-	if( MoveAnything_IsFrameHooked( "MicroButtonsVerticalMover" ) ) then
-		if ( UnitLevel("player") < 10 ) then
-			TalentMicroButton:Hide();
-			QuestLogMicroButton:SetPoint("TOPLEFT", "TalentMicroButton", "TOPLEFT", 0, 0);
-		else
-			TalentMicroButton:Show();
-			QuestLogMicroButton:SetPoint("TOPLEFT", "TalentMicroButton", "BOTTOMLEFT", 0, 24);
-		end
-	else
-		MoveAnything_OriginalUpdateTalentButton();
-	end
+	-- The vertical micro-button layout is intentionally not exposed in Move UI.
+	-- Keep the game's own talent-button behavior and let the horizontal mover
+	-- reposition the complete group without forcing legacy WoW coordinates.
+	MoveAnything_OriginalUpdateTalentButton();
 end
 
 --- UI PANEL HOOKS
@@ -1522,7 +1513,6 @@ end
 MoveAnything_OriginalShowBonusActionBar = ShowBonusActionBar;
 function ShowBonusActionBar()
 	if( MoveAnything_IsFrameHooked( "BasicActionButtonsMover" ) or
-		MoveAnything_IsFrameHooked( "BasicActionButtonsVerticalMover" ) or
 		MoveAnything_IsFrameHidden( "MainMenuBar" ) ) then
 		for i = 1, 12, 1 do
 			getglobal( "ActionButton"..i ):Hide();
@@ -1538,8 +1528,6 @@ function HideBonusActionBar()
 	local opt = nil;
 	if( MoveAnything_IsFrameHooked( "BasicActionButtonsMover" ) ) then
 		hooked = "BasicActionButtonsMover";
-	elseif( MoveAnything_IsFrameHooked( "BasicActionButtonsVerticalMover" ) ) then
-		hooked = "BasicActionButtonsVerticalMover";
 	end
 	if( hooked ) then
 		opt = MoveAnything_FindFrameOptions( hooked, "HideBonusActionBar" );

@@ -67,57 +67,15 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 		</Scripts>
 	</Button>
 
-	<Frame name="MALocator" frameStrata="DIALOG" enableMouse="true" hidden="true" parent="UIParent" movable="true" resizable="true">
-		<Size>
-			<AbsDimension x="100" y="100"/>
-		</Size>
-		<ResizeBounds>
-			<minResize>
-				<AbsDimension x="8" y="8"/>
-			</minResize>
-		</ResizeBounds>
-		<Anchors>
-			<Anchor point="CENTER"/>
-		</Anchors>
-		<Backdrop bgFile="Interface\Tooltips\UI-Tooltip-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
-			<EdgeSize>
-				<AbsValue val="8"/>
-			</EdgeSize>
-			<TileSize>
-				<AbsValue val="16"/>
-			</TileSize>
-			<BackgroundInsets>
-				<AbsInset left="3" right="3" top="3" bottom="3"/>
-			</BackgroundInsets>
-		</Backdrop>
-		<Scripts>
-			<OnMouseDown>
-				if( arg1 == "LeftButton" ) then
-					this:StartMoving();
-				end
-			</OnMouseDown>
-			<OnMouseUp>
-				this:StopMovingOrSizing()
-				if( arg1 == "RightButton" ) then
-					if( IsShiftKeyDown() ) then
-						Print( "Locator left: "..this:GetLeft().." bottom: "..this:GetBottom()..
-								" width: "..this:GetWidth().." height: "..this:GetHeight() );
-					else
-						this:Hide();
-					end
-				end
-			</OnMouseUp>
-		</Scripts>
-		<Frames>
-			<Button name="$parentResize_TOP" inherits="ResizingButton"/>
-			<Button name="$parentResize_LEFT" inherits="ResizingButton"/>
-			<Button name="$parentResize_BOTTOM" inherits="ResizingButton"/>
-			<Button name="$parentResize_RIGHT" inherits="ResizingButton"/>
-		</Frames>
-	</Frame>
 
 	<Frame name="MoveAnythingUpdater" parent="UIParent">
 		<Scripts>
+			<OnLoad>
+				this:RegisterEvent("PLAYER_LOGIN");
+			</OnLoad>
+			<OnEvent>
+				MoveAnythingUpdater_OnEvent();
+			</OnEvent>
 			<OnUpdate>
 				MoveAnythingUpdater_OnUpdate(arg1);
 			</OnUpdate>
@@ -456,237 +414,71 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 	</Frame>
 
 	<Frame name="MicroButtonsMover" parent="UIParent" hidden="true" enableMouse="false">
-		<Size>
-			<AbsDimension x="216" y="32"/>
-		</Size>
-		<Anchors>
-			<Anchor point="BOTTOMLEFT" relativeTo = "MainMenuBarArtFrame">
-				<Offset>
-					<AbsDimension x="546" y="2"/>
-				</Offset>
-			</Anchor>
-		</Anchors>
-		<Scripts>
-			<OnLoad>
-				this.OnMoveAnythingHook = function( this )
-						if( MoveAnything_IsFrameHooked( "MicroButtonsVerticalMover" ) ) then
-							MoveAnything_ResetFrameOptions( "MicroButtonsVerticalMover" );
-						end
-						local grab = { CharacterMicroButton, SpellbookMicroButton,
-								TalentMicroButton, QuestLogMicroButton,
-								SocialsMicroButton, WorldMapMicroButton,
-								MainMenuMicroButton, HelpMicroButton };
-						this.attachedChildren = {};
-						for i in grab do
-							local b, pb;
-							b = grab[i];
-							if( i == 1 ) then
-								b:ClearAllPoints();
-								b:SetPoint( "BOTTOMLEFT", this:GetName(), "BOTTOMLEFT" );
-								pb = nil;
-							else
-								pb = grab[i-1];
-							end
-							table.insert( this.attachedChildren, b );
-						end
-						this:Show();
-					end
-				this.OnMoveAnythingPostReset = function( this )
-						CharacterMicroButton:ClearAllPoints();
-						CharacterMicroButton:SetPoint( "BOTTOMLEFT", "MainMenuBarArtFrame", "BOTTOMLEFT", 546, 2 );
-						this:Hide();
-					end
-			</OnLoad>
-		</Scripts>
+		<Size><AbsDimension x="216" y="32"/></Size>
+		<Anchors><Anchor point="BOTTOMLEFT" relativeTo="UIParent"><Offset><AbsDimension x="0" y="0"/></Offset></Anchor></Anchors>
+		<Scripts><OnLoad>
+			this.MAOriginalMicroPoints = {};
+			this.MAMicroButtons = { CharacterMicroButton, SpellbookMicroButton, TalentMicroButton, QuestLogMicroButton, SocialsMicroButton, WorldMapMicroButton, MainMenuMicroButton, HelpMicroButton };
+			for i in this.MAMicroButtons do
+				local b = this.MAMicroButtons[i];
+				if b then local point, relativeTo, relativePoint, x, y = b:GetPoint(1); this.MAOriginalMicroPoints[i] = { point, relativeTo, relativePoint, x, y }; end
+			end
+			this.OnMoveAnythingHook = function(this)
+				local first = CharacterMicroButton;
+				local point, relativeTo, relativePoint, x, y = first:GetPoint(1);
+				this:ClearAllPoints();
+				this:SetPoint(point or "BOTTOMLEFT", relativeTo or "UIParent", relativePoint or point or "BOTTOMLEFT", x or 0, y or 0);
+				this.attachedChildren = {};
+				first:ClearAllPoints(); first:SetPoint("BOTTOMLEFT", this:GetName(), "BOTTOMLEFT", 0, 0);
+				for i in this.MAMicroButtons do if this.MAMicroButtons[i] then table.insert(this.attachedChildren, this.MAMicroButtons[i]); end end
+				this:Show();
+			end
+			this.OnMoveAnythingPostReset = function(this)
+				for i in this.MAMicroButtons do
+					local b = this.MAMicroButtons[i]; local p = this.MAOriginalMicroPoints[i];
+					if b and p then b:ClearAllPoints(); b:SetPoint(p[1], p[2], p[3], p[4], p[5]); end
+				end
+				this:Hide();
+			end
+		</OnLoad></Scripts>
 	</Frame>
-	<Frame name="MicroButtonsVerticalMover" parent="UIParent" hidden="true" enableMouse="false">
-		<Size>
-			<AbsDimension x="32" y="275"/>
-		</Size>
-		<Anchors>
-			<Anchor point="BOTTOMLEFT" relativeTo = "MainMenuBarArtFrame">
-				<Offset>
-					<AbsDimension x="546" y="2"/>
-				</Offset>
-			</Anchor>
-		</Anchors>
-		<Scripts>
-			<OnLoad>
-				this.OnMoveAnythingHook = function( this )
-						if( MoveAnything_IsFrameHooked( "MicroButtonsMover" ) ) then
-							MoveAnything_ResetFrameOptions( "MicroButtonsMover" );
-						end
-						local grab = { CharacterMicroButton, SpellbookMicroButton,
-								TalentMicroButton, QuestLogMicroButton,
-								SocialsMicroButton, WorldMapMicroButton,
-								MainMenuMicroButton, HelpMicroButton };
-						this.attachedChildren = {};
-						for i in grab do
-							local b, pb;
-							b = grab[i];
-							grab[i]:ClearAllPoints();
-							if( i == 1 ) then
-								grab[i]:SetPoint( "TOPLEFT", this:GetName(), "TOPLEFT", 0, 24 );
-							else
-								grab[i]:SetPoint( "TOPLEFT", grab[i-1]:GetName(), "BOTTOMLEFT", 0, 24 );
-							end
-							table.insert( this.attachedChildren, b );
-						end
-						this:Show();
-					end
-				this.OnMoveAnythingPostReset = function( this )
-						CharacterMicroButton:ClearAllPoints();
-						CharacterMicroButton:SetPoint( "BOTTOMLEFT", "MainMenuBarArtFrame", "BOTTOMLEFT", 546, 2 );
-						local grab = { CharacterMicroButton, SpellbookMicroButton,
-								TalentMicroButton, QuestLogMicroButton,
-								SocialsMicroButton, WorldMapMicroButton,
-								MainMenuMicroButton, HelpMicroButton };
-						for i in grab do
-							local b, pb;
-							if( i > 1 ) then
-								grab[i]:ClearAllPoints();
-								grab[i]:SetPoint( "BOTTOMLEFT", grab[i-1]:GetName(), "BOTTOMRIGHT", -2, 0 );
-							end
-						end
-						this:Hide();
-						UpdateTalentButton();
-					end
-				this.OnMoveAnythingPostAttach = function( this )
-						UpdateTalentButton();
-					end
-			</OnLoad>
-		</Scripts>
-	</Frame>
-
 	<Frame name="BasicActionButtonsMover" parent="UIParent" hidden="true" enableMouse="false">
-		<Size>
-			<AbsDimension x="496" y="32"/>
-		</Size>
-		<Anchors>
-			<Anchor point="BOTTOMLEFT" relativeTo = "MainMenuBarArtFrame">
-				<Offset>
-					<AbsDimension x="8" y="4"/>
-				</Offset>
-			</Anchor>
-		</Anchors>
+		<Size><AbsDimension x="320" y="48"/></Size>
+		<Anchors><Anchor point="BOTTOM" relativeTo="UIParent"><Offset><AbsDimension x="0" y="80"/></Offset></Anchor></Anchors>
 		<Scripts>
 			<OnLoad>
-				this.OnMoveAnythingHook = function( this )
-						local b, pb;
-						if( MoveAnything_IsFrameHooked( "BasicActionButtonsVerticalMover" ) ) then
-							MoveAnything_ResetFrameOptions( "BasicActionButtonsVerticalMover" );
-						end
-						ActionButton1:ClearAllPoints();
-						ActionButton1:SetPoint( "LEFT", this:GetName(), "LEFT", 0, 0 );
-						ActionBarUpButton:ClearAllPoints( );
-						ActionBarUpButton:SetPoint( "TOPLEFT", "ActionButton12", "TOPRIGHT", -6, 4 );
-						ActionBarDownButton:ClearAllPoints();
-						ActionBarDownButton:SetPoint( "BOTTOMLEFT", "ActionButton12", "BOTTOMRIGHT", -6, -8 );
-						this.attachedChildren = {};
-						for i = 1, 12, 1 do
-							b = getglobal( "ActionButton"..i );
-						   table.insert( this.attachedChildren, getglobal( "ActionButton"..i ) );
-						   table.insert( this.attachedChildren, getglobal( "BonusActionButton"..i ) );
-							if( i > 1 ) then
-								pb = getglobal( "ActionButton"..(i-1) );
-								b:ClearAllPoints();
-								b:SetPoint( "LEFT", pb:GetName(), "RIGHT", 2, 0 );
-							end
-							getglobal( "BonusActionButton"..i ):ClearAllPoints();
-							getglobal( "BonusActionButton"..i ):SetPoint( "CENTER", b:GetName(), "CENTER" );
-						end
-						table.insert( this.attachedChildren, ActionBarUpButton );
-						table.insert( this.attachedChildren, ActionBarDownButton );
-						this:Show();
+				this.MAOriginalActionPoints = {};
+				this.MAActionButtons = {};
+				for i = 1, 7 do
+					local b = getglobal("ActionButton"..i);
+					if b then
+						local point, relativeTo, relativePoint, x, y = b:GetPoint(1);
+						this.MAOriginalActionPoints[i] = { point, relativeTo, relativePoint, x, y };
+						table.insert(this.MAActionButtons, b);
 					end
-				this.OnMoveAnythingPostReset = function( this )
-						local b, pb;
-						ActionButton1:ClearAllPoints();
-						ActionButton1:SetPoint( "BOTTOMLEFT", "MainMenuBarArtFrame", "BOTTOMLEFT", 8, 4 );
-						ActionBarUpButton:ClearAllPoints();
-						ActionBarUpButton:SetPoint( "CENTER", "MainMenuBarArtFrame", "TOPLEFT", 522, -22 );
-						ActionBarDownButton:ClearAllPoints();
-						ActionBarDownButton:SetPoint( "CENTER", "MainMenuBarArtFrame", "TOPLEFT", 522, -42 );
-						for i = 1, 12, 1 do
-							b = getglobal( "ActionButton"..i );
-							if( i > 1 ) then
-								pb = getglobal( "ActionButton"..(i-1) );
-								b:ClearAllPoints();
-								b:SetPoint( "LEFT", pb:GetName(), "RIGHT", 6, 0 );
-							end
-							getglobal( "BonusActionButton"..i ):ClearAllPoints();
-							getglobal( "BonusActionButton"..i ):SetPoint( "CENTER", b:GetName(), "CENTER" );
-						end
-						this:Hide();
+				end
+				this.OnMoveAnythingHook = function(this)
+					local first = this.MAActionButtons[1];
+					if not first then return; end
+					local point, relativeTo, relativePoint, x, y = first:GetPoint(1);
+					this:ClearAllPoints();
+					this:SetPoint(point or "BOTTOM", relativeTo or "UIParent", relativePoint or point or "BOTTOM", x or 0, y or 0);
+					this.attachedChildren = {};
+					first:ClearAllPoints();
+					first:SetPoint("LEFT", this:GetName(), "LEFT", 0, 0);
+					for i in this.MAActionButtons do table.insert(this.attachedChildren, this.MAActionButtons[i]); end
+					this:Show();
+				end
+				this.OnMoveAnythingPostReset = function(this)
+					for i in this.MAActionButtons do
+						local b = this.MAActionButtons[i]; local p = this.MAOriginalActionPoints[i];
+						if p then b:ClearAllPoints(); b:SetPoint(p[1], p[2], p[3], p[4], p[5]); end
 					end
+					this:Hide();
+				end
 			</OnLoad>
 		</Scripts>
 	</Frame>
-	<Frame name="BasicActionButtonsVerticalMover" parent="UIParent" hidden="true" enableMouse="false">
-		<Size>
-			<AbsDimension x="32" y="475"/>
-		</Size>
-		<Anchors>
-			<Anchor point="BOTTOMLEFT" relativeTo = "MainMenuBarArtFrame">
-				<Offset>
-					<AbsDimension x="8" y="4"/>
-				</Offset>
-			</Anchor>
-		</Anchors>
-		<Scripts>
-			<OnLoad>
-				this.OnMoveAnythingHook = function( this )
-						local b, pb;
-						if( MoveAnything_IsFrameHooked( "BasicActionButtonsMover" ) ) then
-							MoveAnything_ResetFrameOptions( "BasicActionButtonsMover" );
-						end
-						ActionButton1:ClearAllPoints();
-						ActionButton1:SetPoint( "TOP", this:GetName(), "TOP", 0, 0 );
-						this.attachedChildren = {};
-						for i = 1, 12, 1 do
-							b = getglobal( "ActionButton"..i );
-							table.insert( this.attachedChildren, getglobal( "ActionButton"..i ) );
-							table.insert( this.attachedChildren, getglobal( "BonusActionButton"..i ) );
-							if( i > 1 ) then
-								pb = getglobal( "ActionButton"..(i-1) );
-								b:ClearAllPoints();
-								b:SetPoint( "TOP", pb:GetName(), "BOTTOM", 0, -2 );
-							end
-							getglobal( "BonusActionButton"..i ):ClearAllPoints();
-							getglobal( "BonusActionButton"..i ):SetPoint( "CENTER", b:GetName(), "CENTER" );
-						end
-						table.insert( this.attachedChildren, ActionBarUpButton );
-						table.insert( this.attachedChildren, ActionBarDownButton );
-						ActionBarUpButton:ClearAllPoints( );
-						ActionBarUpButton:SetPoint( "TOPLEFT", "ActionButton12", "BOTTOMLEFT", -8, 4 );
-						ActionBarDownButton:ClearAllPoints();
-						ActionBarDownButton:SetPoint( "TOPRIGHT", "ActionButton12", "BOTTOMRIGHT", 8, 4 );
-						this:Show();
-					end
-				this.OnMoveAnythingPostReset = function( this )
-						local b, pb;
-						ActionButton1:ClearAllPoints();
-						ActionButton1:SetPoint( "BOTTOMLEFT", "MainMenuBarArtFrame", "BOTTOMLEFT", 8, 4 );
-						ActionBarUpButton:ClearAllPoints();
-						ActionBarUpButton:SetPoint( "CENTER", "MainMenuBarArtFrame", "TOPLEFT", 522, -22 );
-						ActionBarDownButton:ClearAllPoints();
-						ActionBarDownButton:SetPoint( "CENTER", "MainMenuBarArtFrame", "TOPLEFT", 522, -42 );
-						for i = 1, 12, 1 do
-							b = getglobal( "ActionButton"..i );
-							if( i > 1 ) then
-								pb = getglobal( "ActionButton"..(i-1) );
-								b:ClearAllPoints();
-								b:SetPoint( "LEFT", pb:GetName(), "RIGHT", 6, 0 );
-							end
-							getglobal( "BonusActionButton"..i ):ClearAllPoints();
-							getglobal( "BonusActionButton"..i ):SetPoint( "CENTER", b:GetName(), "CENTER" );
-						end
-						this:Hide();
-					end
-			</OnLoad>
-		</Scripts>
-	</Frame>
-
 	<Frame name="PetActionButtonsMover" parent="UIParent" hidden="true" enableMouse="false">
 		<Size>
 			<AbsDimension x="370" y="32"/>

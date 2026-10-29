@@ -1,6 +1,6 @@
 -- MoveAnything grid extension for Azeroth Survivors (WoW-client-derived UI)
 -- Uses Lua 5.0-compatible syntax.
-local MAAS_GRID_SPACING = 24
+local MAAS_GRID_SPACING = 32
 local MAAS_GRID_ALPHA = 0.30
 local MAAS_GRID_THICKNESS = 1.0
 local MAAS_GridFrame
@@ -83,7 +83,7 @@ function MoveAnythingAS_ToggleGrid()
         if Print then Print("Move UI: grid hidden.") end
     else
         MoveAnythingAS_ShowGrid()
-        if Print then Print("Move UI: grid shown (24-unit spacing).") end
+        if Print then Print("Move UI: grid shown (32-unit spacing).") end
     end
 end
 

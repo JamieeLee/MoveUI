@@ -2,7 +2,7 @@
 ## Title: Move UI
 ## Notes: Move UI positioning tool for Azeroth Survivors. Full-screen alignment grid included.
 ## Author: JamieLinux
-## Version: 1.0.4-AS
+## Version: 1.2.2
 ## SavedVariables: MoveAnything_CustomFrames, MoveAnything_CharacterSettings, MoveAnything_UseCharacterSettings
 MoveAnything.xml
 MoveAnythingGrid.lua
