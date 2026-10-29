@@ -90,3 +90,10 @@ This project is independently adapted for Azeroth Survivors. It is not an offici
 **Credit belongs to the original authors for the work that made this adaptation possible.** Original copyright notices, attribution, and applicable license terms must be retained and respected. 
 
 **Move UI — a modernized, Azeroth Survivors-focused adaptation of MoveAnything.**
+
+
+**Attribution and Redistribution Notice**
+
+This project is based on the original MoveAnything addon and has been adapted and modified by Jamie Lee for use with Azeroth Survivors.
+
+Reproduction, redistribution, or incorporation of this addon into other Azeroth Survivors addons or projects must include appropriate credit to both Jamie Lee (Move UI) and the original MoveAnything project and its authors. Please do not use or redistribute this work without preserving the applicable attributions.
