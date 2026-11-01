@@ -69,34 +69,10 @@ end
 
 -- The old ad-hoc debug commands and MALocator helper were unused by the addon UI.
 
-local MoveAnythingAS_LoginRefreshPending = false
-local MoveAnythingAS_LoginRefreshElapsed = 0
-
-function MoveAnythingUpdater_OnEvent()
-	if event == "PLAYER_LOGIN" then
-		MoveAnythingAS_LoginRefreshPending = true
-		MoveAnythingAS_LoginRefreshElapsed = 0
-	end
-end
-
 function MoveAnythingUpdater_OnUpdate(arg1)
 	if MoveAnythingUpdater:GetScale() == UIParent:GetScale() then
 		MoveAnythingUpdater:SetScale(0.2)
 		MoveAnything_RefreshPositions()
-	end
-
-	-- LocalClock creates LocalClockFrame at PLAYER_LOGIN. If that frame exists,
-	-- reapply saved Move UI positions once so its own initial placement cannot
-	-- overwrite the position saved by Move UI on the previous session.
-	if MoveAnythingAS_LoginRefreshPending then
-		MoveAnythingAS_LoginRefreshElapsed = MoveAnythingAS_LoginRefreshElapsed + (arg1 or 0)
-		if LocalClockFrame then
-			MoveAnything_RefreshPositions()
-			MoveAnythingAS_LoginRefreshPending = false
-		elseif MoveAnythingAS_LoginRefreshElapsed >= 10 then
-			-- Do not keep polling forever if LocalClock is not installed.
-			MoveAnythingAS_LoginRefreshPending = false
-		end
 	end
 end
 
@@ -170,6 +146,7 @@ MoveAnything_DefaultFrameList = {
 	{ "MainMenuBarRightEndCap", "Right gargoyle" },
 	-- MainMenuBarArtFrame intentionally omitted: moving this stock artwork freezes Azeroth Survivors.
 	{ "BasicActionButtonsMover", "Spell buttons" },
+	{ "MoveUIRunClockFrame", "Run Timer / Boss Countdown" },
 	{ "MicroButtonsMover", "Character and talent buttons" },
 
 	{ "Separator", "**** Minimap ****" },
@@ -180,6 +157,10 @@ MoveAnything_DefaultFrameList = {
 	{ "MiniMapTrackingFrame", "MiniMap Tracking" },
 	{ "GameTimeFrame", "MiniMap Day-Night Clock" },
 
+	{ "Separator", "**** Center Screen Alerts ****" },
+	{ "RaidWarningFrame", "Raid Warning" },
+	{ "LocalClockAlarmWarning", "LocalClock Alarm Warning" },
+
 	{ "Separator", "**** Miscellaneous Screen Items ****" },
 	{ "StaticPopup1", "Static Popup Frame" },
 	{ "UIErrorsFrame", "UI Errors Frame" },
@@ -188,7 +169,6 @@ MoveAnything_DefaultFrameList = {
 	{ "TemporaryEnchantFrame", "Item buff/Debuff Windows" },
 	{ "TooltipMover", "Tooltip" },
 	{ "FramerateMover", "Move FPS" },
-	{ "LocalClockFrame", "Local Clock" },
 	{ "QuestWatchFrame", "Quest Tracker" },
 	{ "QuestTimerFrame", "Quest Timer" },
 	{ "ComboFrame", "Rogue Combo point counter" },
@@ -205,6 +185,197 @@ MoveAnything_DefaultFrameList = {
 	{ "QuestLogFrame", "Quest Log" },
 	{ "FriendsFrame", "Friends / Who / Guild / Raid" },
 }
+
+-- Azeroth Survivors run timer / next-boss countdown.
+-- The game API exposes the timing data but not a movable native frame.
+-- This addon-owned frame recreates that HUD readout so Move UI can move,
+-- scale, hide, save, and reset it through the normal managed-frame system.
+local function MoveUI_RunClockGetNativeShown()
+	if ( AZS_IsHudShown ) then
+		local ok, value = pcall( AZS_IsHudShown, "clock" );
+		if ( ok ) then
+			if ( value == true or value == 1 or value == "1" ) then return true; end
+			if ( value == false or value == 0 or value == "0" ) then return false; end
+		end
+	end
+	if ( GetCVar ) then
+		local ok, value = pcall( GetCVar, "hudClock" );
+		if ( ok and value == "1" ) then return true; end
+		if ( ok and value == "0" ) then return false; end
+	end
+	return nil;
+end
+
+local function MoveUI_RunClockSetNativeShown( value )
+	local shown = value and true or false;
+	if ( AZS_SetHudShown ) then
+		local ok = pcall( AZS_SetHudShown, "clock", shown );
+		if ( ok ) then return true; end
+	end
+	if ( SetCVar ) then
+		local cvarValue = "0";
+		if ( shown ) then cvarValue = "1"; end
+		local ok = pcall( SetCVar, "hudClock", cvarValue );
+		if ( ok ) then return true; end
+	end
+	return false;
+end
+
+local MoveUI_RunClockOriginalNativeShown = nil;
+local MoveUI_RunClockNativeOverrideActive = false;
+local MoveUI_RunClockWarningShown = false;
+
+local function MoveUI_RunClockSuppressNative()
+	if ( not MoveUI_RunClockNativeOverrideActive ) then
+		local original = MoveUI_RunClockGetNativeShown();
+		if ( original == nil ) then
+			-- The documented getter should provide the preference. If it is
+			-- missing in a client build, assume the normal visible default.
+			original = true;
+		end
+		MoveUI_RunClockOriginalNativeShown = original;
+	end
+
+	if ( MoveUI_RunClockSetNativeShown( false ) ) then
+		MoveUI_RunClockNativeOverrideActive = true;
+	elseif ( not MoveUI_RunClockWarningShown ) then
+		MoveUI_RunClockWarningShown = true;
+		Print( "Move UI: could not hide the game's run clock; the HUD API is unavailable." );
+	end
+end
+
+local function MoveUI_RunClockRestoreNative()
+	if ( not MoveUI_RunClockNativeOverrideActive ) then return; end
+
+	local original = MoveUI_RunClockOriginalNativeShown;
+	if ( original == nil ) then original = true; end
+	if ( MoveUI_RunClockSetNativeShown( original ) ) then
+		MoveUI_RunClockNativeOverrideActive = false;
+		MoveUI_RunClockOriginalNativeShown = nil;
+	end
+end
+
+local function MoveUI_RunClockFormat(seconds)
+	seconds = tonumber( seconds ) or 0;
+	if ( seconds < 0 ) then seconds = 0; end
+	seconds = math.floor( seconds );
+
+	local hours = math.floor( seconds / 3600 );
+	local minutes = math.floor( math.mod( seconds, 3600 ) / 60 );
+	local secs = math.mod( seconds, 60 );
+
+	if ( hours > 0 ) then
+		return string.format( "%d:%02d:%02d", hours, minutes, secs );
+	end
+	return string.format( "%02d:%02d", minutes, secs );
+end
+
+local function MoveUI_RunClockUpdate(runText, bossText)
+	local phase = nil;
+	if ( AZS_GetPhase ) then
+		local ok, value = pcall( AZS_GetPhase );
+		if ( ok ) then phase = value; end
+	end
+
+	local runTime = nil;
+	if ( AZS_GetRunTime ) then
+		local ok, value = pcall( AZS_GetRunTime );
+		if ( ok and type( value ) == "number" ) then runTime = value; end
+	end
+
+	if ( runTime == nil ) then
+		runText:SetText( "00:00" );
+		if ( phase == "ready" or phase == nil ) then
+			bossText:SetText( "Waiting for run" );
+		else
+			bossText:SetText( "Run timer unavailable" );
+		end
+		return;
+	end
+
+	runText:SetText( MoveUI_RunClockFormat( runTime ) );
+
+	if ( phase == "dead" ) then
+		bossText:SetText( "Run ended" );
+		return;
+	elseif ( phase == "victory" ) then
+		bossText:SetText( "Run complete" );
+		return;
+	end
+
+	local nextBoss = nil;
+	if ( AZS_GetUpcomingBosses ) then
+		local ok, bosses = pcall( AZS_GetUpcomingBosses );
+		if ( ok and type( bosses ) == "table" ) then
+			nextBoss = bosses[1];
+		end
+	end
+
+	if ( nextBoss ) then
+		local bossName = nextBoss.name or "Boss";
+		local left = nextBoss.left or 0;
+		bossText:SetText( "Next boss: " .. bossName .. " in " .. MoveUI_RunClockFormat( left ) );
+	else
+		bossText:SetText( "No upcoming boss" );
+	end
+end
+
+function MoveAnything_CreateRunClock()
+	if ( MoveUIRunClockFrame ) then return; end
+
+
+	local frame = CreateFrame( "Frame", "MoveUIRunClockFrame", UIParent );
+	frame:SetWidth( 220 );
+	frame:SetHeight( 46 );
+	frame:SetPoint( "TOP", UIParent, "TOP", 0, -80 );
+	frame:SetFrameStrata( "MEDIUM" );
+	frame:SetClampedToScreen( true );
+	frame:EnableMouse( false );
+
+	local runText = frame:CreateFontString( nil, "OVERLAY", "GameFontNormalLarge" );
+	runText:SetPoint( "TOP", frame, "TOP", 0, -1 );
+	runText:SetTextColor( 1.0, 0.82, 0.25 );
+	runText:SetText( "00:00" );
+
+	local bossText = frame:CreateFontString( nil, "OVERLAY", "GameFontNormalSmall" );
+	bossText:SetPoint( "TOP", runText, "BOTTOM", 0, -3 );
+	bossText:SetTextColor( 1.0, 1.0, 1.0 );
+	bossText:SetText( "Waiting for run" );
+
+	-- Hiding this managed frame restores the game's native run-clock HUD.
+	-- Showing it suppresses the native HUD again. This makes Move UI's normal
+	-- Hide checkbox behave exactly like other managed components.
+	frame:Hide();
+	frame:SetScript( "OnShow", function()
+		MoveUI_RunClockSuppressNative();
+	end );
+	frame:SetScript( "OnHide", function()
+		MoveUI_RunClockRestoreNative();
+	end );
+
+	local updateElapsed = 0;
+	frame:SetScript( "OnUpdate", function()
+		updateElapsed = updateElapsed + ( arg1 or 0 );
+		if ( updateElapsed < 0.2 ) then return; end
+		updateElapsed = 0;
+		MoveUI_RunClockUpdate( runText, bossText );
+	end );
+
+	frame:Show();
+
+	-- Keep logout recovery independent of the managed frame's visibility.
+	if ( not MoveUIRunClockLifecycleFrame ) then
+		local lifecycle = CreateFrame( "Frame", "MoveUIRunClockLifecycleFrame", UIParent );
+		lifecycle:RegisterEvent( "PLAYER_LOGOUT" );
+		lifecycle:SetScript( "OnEvent", function()
+			if ( event == "PLAYER_LOGOUT" ) then
+				MoveUI_RunClockRestoreNative();
+			end
+		end );
+	end
+
+	MoveUI_RunClockUpdate( runText, bossText );
+end
 
 function MoveAnything_AddPredefinedFrames( frameList )
 	for i, val in frameList do
@@ -247,6 +418,12 @@ function MoveAnything_GetPositionParent( frame )
 		local name = frame:GetName();
 		if ( name == "MainMenuBarLeftEndCap" or name == "MainMenuBarRightEndCap" ) then
 			return MainMenuBar;
+		end
+		-- LocalClock lives under UIParent so it can be shown independently
+		-- while MinimapCluster is hidden, but its saved/moved position is
+		-- always expressed relative to the minimap assembly.
+		if ( name == "LocalClockDisplayFrame" and MinimapCluster ) then
+			return MinimapCluster;
 		end
 	end
 	return MAGetParent( frame );
@@ -296,7 +473,11 @@ function MoveAnything_RefreshPositions()
 				frame:HiddenClearAllPoints();
 				frame:HiddenSetPoint( "BOTTOMLEFT", parent:GetName(), "BOTTOMLEFT", opt.x, opt.y );
 				if( opt.scale ) then
-					frame:HiddenSetScale( opt.scale );
+					local savedScale = opt.scale;
+					if ( opt.name == "LocalClockDisplayFrame" ) then
+						savedScale = savedScale * ( frame.LocalClockMinimapScale or 1 );
+					end
+					frame:HiddenSetScale( savedScale );
 					if( frame.attachedChildren ) then
 						for i, v in frame.attachedChildren do
 							v:HiddenSetScale( opt.scale );
@@ -337,6 +518,7 @@ function MoveAnything_Init()
 		return;
 	end
 
+	MoveAnything_CreateRunClock();
 	MoveAnything_AddDefaultFrames();
 
 	-- update settings from old versions
@@ -921,7 +1103,13 @@ function MoveAnything_OnSizeChanged( this )
 
 			if( MoveAnything_ScaleAllowed( this.tagged:GetName() ) ) then
 				if( opt ) then
-					opt.scale = s;
+					if ( this.tagged:GetName() == "LocalClockDisplayFrame" ) then
+						local minimapScale = this.tagged.LocalClockMinimapScale or 1;
+						if ( minimapScale <= 0 ) then minimapScale = 1; end
+						opt.scale = s / minimapScale;
+					else
+						opt.scale = s;
+					end
 				end
 
 				-- Some Azeroth Survivors frames do not implement SetScale.
@@ -951,12 +1139,26 @@ function MoveAnything_GetRelativeBottomLeft( tagFrame )
 	x = tagFrame:GetLeft();
 	if( x ) then
 		local positionParent = MoveAnything_GetPositionParent( tagFrame );
-		x = x - positionParent:GetLeft() * MAGetScale( positionParent ) / MAGetScale( tagFrame );
+		if ( tagFrame:GetName() == "LocalClockDisplayFrame" ) then
+			local uiScale = MAGetScale( UIParent, 1 ) or 1;
+			local parentScale = MAGetScale( positionParent, 1 ) or 1;
+			if ( parentScale <= 0 ) then parentScale = 1; end
+			x = ( x - positionParent:GetLeft() ) * uiScale / parentScale;
+		else
+			x = x - positionParent:GetLeft() * MAGetScale( positionParent ) / MAGetScale( tagFrame );
+		end
 	end
 	y = tagFrame:GetBottom();
 	if( y ) then
 		local positionParent = MoveAnything_GetPositionParent( tagFrame );
-		y = y - positionParent:GetBottom() * MAGetScale( positionParent ) / MAGetScale( tagFrame );
+		if ( tagFrame:GetName() == "LocalClockDisplayFrame" ) then
+			local uiScale = MAGetScale( UIParent, 1 ) or 1;
+			local parentScale = MAGetScale( positionParent, 1 ) or 1;
+			if ( parentScale <= 0 ) then parentScale = 1; end
+			y = ( y - positionParent:GetBottom() ) * uiScale / parentScale;
+		else
+			y = y - positionParent:GetBottom() * MAGetScale( positionParent ) / MAGetScale( tagFrame );
+		end
 	end
 	return x,y;
 end
@@ -986,10 +1188,19 @@ function MoveAnything_Attach( moveFrame, tagFrame )
 		moverParent = UIParent;
 	else
 		moverParent = MoveAnything_GetPositionParent( tagFrame );
-		x = tagFrame:GetLeft() * MAGetScale( tagFrame, 1 ) / UIParent:GetScale();
-		x = x - moverParent:GetLeft() * MAGetScale( moverParent, 1 ) / UIParent:GetScale();
-		y = tagFrame:GetBottom() * MAGetScale( tagFrame, 1 ) / UIParent:GetScale();
-		y = y - moverParent:GetBottom() * MAGetScale( moverParent, 1 ) / UIParent:GetScale();
+		if ( tagFrame:GetName() == "LocalClockDisplayFrame" ) then
+			local uiScale = UIParent:GetEffectiveScale();
+			local parentScale = moverParent:GetEffectiveScale();
+			if ( not uiScale or uiScale <= 0 ) then uiScale = 1; end
+			if ( not parentScale or parentScale <= 0 ) then parentScale = 1; end
+			x = ( tagFrame:GetLeft() - moverParent:GetLeft() ) * uiScale / parentScale;
+			y = ( tagFrame:GetBottom() - moverParent:GetBottom() ) * uiScale / parentScale;
+		else
+			x = tagFrame:GetLeft() * MAGetScale( tagFrame, 1 ) / UIParent:GetScale();
+			x = x - moverParent:GetLeft() * MAGetScale( moverParent, 1 ) / UIParent:GetScale();
+			y = tagFrame:GetBottom() * MAGetScale( tagFrame, 1 ) / UIParent:GetScale();
+			y = y - moverParent:GetBottom() * MAGetScale( moverParent, 1 ) / UIParent:GetScale();
+		end
 	end
 
 	moveFrame:ClearAllPoints();
@@ -1047,7 +1258,11 @@ function MoveAnything_ResetFrameOptions( frameName )
 	frame:ClearAllPoints();
 	frame:SetPoint( "BOTTOMLEFT", MoveAnything_GetPositionParent( frame ):GetName(), "BOTTOMLEFT", left, bottom );
 	if( opt and MoveAnything_ScaleAllowed( frame:GetName() ) and opt.originalScale ) then
-		frame:SetScale( opt.originalScale );
+		if ( frame:GetName() == "LocalClockDisplayFrame" and frame.HiddenSetScale ) then
+			frame:HiddenSetScale( frame.LocalClockMinimapScale or opt.originalScale );
+		else
+			frame:SetScale( opt.originalScale );
+		end
 	end
 	if( width ) then frame:SetWidth( width ); end
 	if( height ) then frame:SetHeight( height ); end
@@ -1138,6 +1353,16 @@ function MoveAnything_HiddenIsVisible( this )
 	return this.MAWantsToBeVisible;
 end
 
+local function MoveAnything_NotifyLocalClockVisibility( frame, visible )
+	if ( not frame or not frame.GetName ) then return; end
+	local name = frame:GetName();
+	if ( name == "LocalClockDisplayFrame" and LocalClock_OnMoveUIVisibilityChanged ) then
+		LocalClock_OnMoveUIVisibilityChanged( visible );
+	elseif ( name == "MinimapCluster" and LocalClock_OnMinimapVisibilityChanged ) then
+		LocalClock_OnMinimapVisibilityChanged( visible );
+	end
+end
+
 function MoveAnything_HideFrame( frame )
 	if ( not frame ) then return; end
 	if ( not MoveAnything_IsFrameHooked( frame:GetName() ) ) then
@@ -1174,6 +1399,7 @@ function MoveAnything_HideFrame( frame )
 	else
 		MoveAnything_PreventExternalVisibility( frame );
 	end
+	MoveAnything_NotifyLocalClockVisibility( frame, false );
 end
 
 function MoveAnything_ShowFrame( frame )
@@ -1217,15 +1443,33 @@ function MoveAnything_ShowFrame( frame )
 	else
 		MoveAnything_AllowExternalVisibility( frame );
 	end
+	MoveAnything_NotifyLocalClockVisibility( frame, true );
 end
 
 function MoveAnything_OnHideCheck( button )
 	local frame = MoveAnything_GetMovableFrame( MAGetParent( button ) );
 	if ( not frame ) then return; end
+	local frameName = frame:GetName();
+	local opt = MoveAnything_FindFrameOptions( frameName, "Hide checkbox" );
 	if( button:GetChecked() ) then
+		if ( frameName == "LocalClockDisplayFrame" and opt ) then
+			opt.minimapSuppressed = nil;
+		end
 		MoveAnything_HideFrame( frame );
 	else
-		MoveAnything_ShowFrame( frame );
+		if ( frameName == "LocalClockDisplayFrame" and opt and opt.minimapSuppressed and not opt.hidden ) then
+			-- This checked state came from the minimap being hidden, not the
+			-- user's own Hide preference. Allow LocalClock to show independently.
+			opt.minimapSuppressed = nil;
+			if ( LocalClock_OnMoveUIVisibilityChanged ) then
+				LocalClock_OnMoveUIVisibilityChanged( true );
+			end
+		else
+			if ( frameName == "LocalClockDisplayFrame" and opt ) then
+				opt.minimapSuppressed = nil;
+			end
+			MoveAnything_ShowFrame( frame );
+		end
 	end
 	MoveAnythingOptions_Update();
 end
@@ -1274,7 +1518,7 @@ function MoveAnythingOptions_Update()
 			else
 				getglobal( "MAMove"..i.."Move" ):SetChecked( nil );
 			end
-			if( opt and opt.hidden ) then
+			if( opt and ( opt.hidden or opt.minimapSuppressed ) ) then
 				getglobal( "MAMove"..i.."Hide" ):SetChecked( 1 );
 			else
 				getglobal( "MAMove"..i.."Hide" ):SetChecked( nil );

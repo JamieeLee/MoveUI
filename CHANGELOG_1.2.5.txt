@@ -1,0 +1,6 @@
+Move UI 1.2.5 - LocalClock minimap docking compatibility
+
+- Removed the obsolete standalone LocalClockFrame mover entry. LocalClock 1.2.0 now docks its additional time-zone display below the native minimap clock; both elements are children of MinimapCluster and follow the minimap as one assembly.
+- Removed the old one-time LocalClockFrame position-refresh hook because LocalClock is no longer managed as a separate Move UI frame.
+- Preserves the tested 1.2.3 run timer / next-boss countdown implementation and its visibility behavior unchanged.
+- No PaperDoll or unrelated frame behavior changes.

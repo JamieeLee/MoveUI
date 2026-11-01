@@ -70,12 +70,6 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 
 	<Frame name="MoveAnythingUpdater" parent="UIParent">
 		<Scripts>
-			<OnLoad>
-				this:RegisterEvent("PLAYER_LOGIN");
-			</OnLoad>
-			<OnEvent>
-				MoveAnythingUpdater_OnEvent();
-			</OnEvent>
 			<OnUpdate>
 				MoveAnythingUpdater_OnUpdate(arg1);
 			</OnUpdate>

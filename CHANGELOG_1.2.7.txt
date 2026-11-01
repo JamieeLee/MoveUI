@@ -1,0 +1,7 @@
+Move UI 1.2.7 - Raid Warning mover
+
+- Added the game's RaidWarningFrame to the managed frame list under Center Screen Alerts.
+- Raid Warning now uses the standard Move UI move, scale, hide/show, saved-position, and reset controls.
+- The setting applies to all messages displayed through the game's Raid Warning frame, including LocalClock alarm warnings.
+- No changes to the warning message logic, LocalClock, or the existing run timer / boss countdown implementation.
+

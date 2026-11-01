@@ -1,0 +1,14 @@
+Move UI 1.2.3
+=============
+
+Added
+- Added a managed "Run Timer / Boss Countdown" frame.
+- Displays the elapsed run timer and the next scheduled boss/countdown using the documented Azeroth Survivors addon API.
+- Uses the standard Move UI mover, saved-position, scale, hide/show, and reset behavior.
+- Hides the game's native run-clock/next-boss HUD while the replacement is visible.
+- Restores the original native HUD preference when the replacement is hidden or the player logs out.
+
+Compatibility
+- Interface remains 11200.
+- Uses Lua 5.0-compatible syntax and the existing MoveAnything frame-management pipeline.
+- No changes to Azeroth Survivors itself.
