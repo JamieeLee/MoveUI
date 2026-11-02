@@ -118,6 +118,7 @@ local function CreateAddonToolsPanel()
         panel:SetBackdropColor(0.05, 0.05, 0.05, 0.96)
         panel:SetBackdropBorderColor(0.4, 0.4, 0.4, 1)
     end
+    if UISpecialFrames then table.insert(UISpecialFrames, "MoveUIAddonToolsFrame") end
     panel:SetScript("OnDragStart", function() panel:StartMoving() end)
     panel:SetScript("OnDragStop", function() panel:StopMovingOrSizing() end)
 
