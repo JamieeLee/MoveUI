@@ -1,6 +1,0 @@
-Move UI 1.2.8 - LocalClock alarm warning mover
-
-- Added LocalClockAlarmWarning as a separate managed frame under Center Screen Alerts.
-- Position, scale, hide/show, saved settings, and reset now target the actual LocalClock alarm banner.
-- The existing Raid Warning mover remains dedicated to the game native RaidWarningFrame.
-- No changes to the minimap, LocalClock clock positioning, or run timer / boss countdown implementation.
