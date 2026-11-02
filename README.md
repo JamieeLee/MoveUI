@@ -66,7 +66,7 @@ These issues are being tracked as development continues.
 
 ## Development
 
-Move UI is being developed incrementally, with changes tested against the actual game wherever possible.
+Move UI is being developed incrementally, with changes tested against the actual game wherever possible. Add-on shortcuts remain optional: Move UI detects BigCursor and LocalClock through their slash-command registrations and does not require either addon to be installed.
 
 Legacy internal identifiers may be retained when changing them could break compatibility. User-facing labels, obsolete menu entries, and documentation are cleaned up separately to reduce unnecessary risk.
 
