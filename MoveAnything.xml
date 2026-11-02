@@ -1058,6 +1058,7 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 				if ( MoveUI_CreateAddonTools ) then MoveUI_CreateAddonTools(); end
 			</OnLoad>
 			<OnShow>
+				if ( MoveUI_CreateAddonTools ) then MoveUI_CreateAddonTools(); end
 				MoveAnythingOptions_OnShow();
 			</OnShow>
 			<OnHide>
