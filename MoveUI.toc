@@ -2,7 +2,7 @@
 ## Title: Move UI
 ## Notes: Move UI positioning tool for Azeroth Survivors, with run timer, LocalClock frame integration, and optional BigCursor/LocalClock shortcuts.
 ## Author: JamieLinux
-## Version: 1.2.8-Tools-Test2
+## Version: 1.2.9
 ## SavedVariables: MoveAnything_CustomFrames, MoveAnything_CharacterSettings, MoveAnything_UseCharacterSettings, MoveUIDB
 MoveAnything.xml
 MoveUIAddonTools.lua
