@@ -203,7 +203,7 @@ function MoveUI_CreateAddonTools()
         MoveUIAddonToolsButton = button
         button:SetWidth(92)
         button:SetHeight(22)
-        button:SetPoint("TOPRIGHT", MAOptions, "TOPRIGHT", -22, -18)
+        button:SetPoint("TOPRIGHT", MAOptions, "TOPRIGHT", -22, -8)
         button:SetText("Add-on Tools")
         local text = button:GetFontString()
         if text and text.SetJustifyH then text:SetJustifyH("CENTER") end
