@@ -8,7 +8,7 @@ Move UI adapts and modernizes the classic MoveAnything interface for Azeroth Sur
 
 ## Project Status
 
-Move UI 1.2.9 adds a unified minimap launcher and an Add-on Tools panel for optional BigCursor and LocalClock integrations. The established mover, saved-position, grid, run timer, and LocalClock frame behavior are preserved.
+Move UI 1.2.9 is the latest stable release. The 1.3.0 development branch focuses on reorganizing the runtime into focused modules while preserving the established mover, saved-position, grid, run timer, and LocalClock behavior.
 
 For version history, see [CHANGELOG.md](CHANGELOG.md).
 

@@ -2,6 +2,13 @@
 
 Version history for Move UI, the Azeroth Survivors-focused adaptation of MoveAnything.
 
+## Unreleased — 1.3.0 development
+
+- Refactor the monolithic runtime into focused frame-catalog, run-clock, registry, mover, visibility, compatibility-hook, and command modules.
+- Separate the Add-on Tools panel, minimap launcher, and standalone-addon bubble integration.
+- Preserve legacy XML callbacks, frame identifiers, saved-variable names, slash commands, and existing behavior; no user-facing behavior change is intended.
+
+
 ## 1.2.9 — Unified Add-on Tools and minimap launcher
 
 - Added a classic, draggable Move UI minimap bubble with a saved position.
