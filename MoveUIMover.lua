@@ -116,8 +116,6 @@ function MA_NudgerFrameRefresh(reset)
 	ResizingNudgerTitle:SetText(labelText);
 end
 
-	return frameName;
-end
 
 function MA_NudgerOnUpdate()
 	-- Show readable names while preserving all internal frame identifiers.

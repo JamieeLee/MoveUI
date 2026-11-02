@@ -8,6 +8,8 @@ local function MoveUI_DisplayFrameName(frameName)
 	if (string.sub(frameName, 1, 2) == "MA") then
 		return "Move UI "..string.sub(frameName, 3);
 	end
+	return frameName;
+end
 
 function MoveAnything_HiddenShow( this )
 	this.MAWantsToBeVisible = true;
