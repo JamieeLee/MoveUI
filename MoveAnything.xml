@@ -1,7 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 	<Script file="MoveAnything.lua"/>
-	<Script file="MoveUIAddonTools.lua"/>
 	<Script file="MAPredefinedFrames.lua"/>
 	<Script file="MoveAnythingGrid.lua"/>
 
@@ -1055,10 +1054,8 @@ C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 			<OnLoad>
 				this:RegisterEvent("VARIABLES_LOADED");
 				this:RegisterEvent("ADDON_LOADED");
-				if ( MoveUI_CreateAddonTools ) then MoveUI_CreateAddonTools(); end
 			</OnLoad>
 			<OnShow>
-				if ( MoveUI_CreateAddonTools ) then MoveUI_CreateAddonTools(); end
 				MoveAnythingOptions_OnShow();
 			</OnShow>
 			<OnHide>
