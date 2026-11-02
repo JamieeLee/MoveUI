@@ -221,3 +221,6 @@ function MoveUI_CreateAddonTools()
         button:Show()
     end
 end
+
+-- MoveAnything.xml and the MAOptions frame load before this file through the TOC.
+if MAOptions then MoveUI_CreateAddonTools() end
