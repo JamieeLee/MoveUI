@@ -116,12 +116,6 @@ function MA_NudgerFrameRefresh(reset)
 	ResizingNudgerTitle:SetText(labelText);
 end
 
-local function MoveUI_DisplayFrameName(frameName)
-	-- Presentation-only alias: internal WoW/MoveAnything frame names stay unchanged.
-	if (not frameName) then return ""; end
-	if (string.sub(frameName, 1, 2) == "MA") then
-		return "Move UI "..string.sub(frameName, 3);
-	end
 	return frameName;
 end
 
