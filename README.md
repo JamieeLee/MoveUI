@@ -105,3 +105,11 @@ Reproduction, redistribution, or incorporation of this addon into other Azeroth 
 - Use `/movetools` as a chat-command fallback for Add-on Tools.
 - BigCursor is exposed as a utility control only; it is not added to the movable-frame list.
 - LocalClock continues to use its existing Move UI frame integration.
+
+
+## Add-on Tools integration test
+The `feature/addon-tools-integration` branch adds a draggable Move UI minimap bubble and a compact Add-on Tools panel. The MU bubble uses a saved minimap angle and supports round/square minimaps. Left-click opens Move UI; right-click opens Add-on Tools; `/movetools` is the chat fallback.
+
+When Move UI is loaded, its panel replaces the standalone BigCursor and LocalClock minimap bubbles. Move UI hides those two buttons at runtime only. The BigCursor and LocalClock source files and standalone addon packages are not changed. BigCursor remains outside the movable-frame list, and LocalClock's existing frame integration is preserved.
+
+This branch is a test build and has not been verified in-game.
