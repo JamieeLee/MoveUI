@@ -8,7 +8,7 @@ Move UI adapts and modernizes the classic MoveAnything interface for Azeroth Sur
 
 ## Project Status
 
-Move UI is an active work in progress. The current build has been tested in Azeroth Survivors, and development is focused on improving compatibility with the game's UI, simplifying the frame list, and preserving the original layout of interface elements.
+Move UI 1.2.9 adds a unified minimap launcher and an Add-on Tools panel for optional BigCursor and LocalClock integrations. The established mover, saved-position, grid, run timer, and LocalClock frame behavior are preserved.
 
 ## Features
 
@@ -17,6 +17,8 @@ Move UI is an active work in progress. The current build has been tested in Azer
 - **Reset controls:** Reset individual frames or reset supported frame positions.
 - **Alignment grid:** Display a full-screen grid to help position interface elements accurately.
 - **FPS display:** Keep the FPS display available for monitoring performance.
+- **Minimap launcher:** A draggable, position-saving Move UI bubble for round and square minimaps.
+- **Add-on Tools:** Open BigCursor controls and LocalClock Options/Clock Tools from one place; the standalone addon bubbles are hidden only while Move UI is active.
 - **Simplified interface:** Remove obsolete menu entries for systems that Azeroth Survivors does not use.
 - **Move complete UI assemblies:** Prefer moving an entire interface assembly instead of exposing its individual buttons as separate movers.
 
@@ -107,9 +109,15 @@ Reproduction, redistribution, or incorporation of this addon into other Azeroth 
 - LocalClock continues to use its existing Move UI frame integration.
 
 
-## Add-on Tools integration test
-The `feature/addon-tools-integration` branch adds a draggable Move UI minimap bubble and a compact Add-on Tools panel. The MU bubble uses a saved minimap angle and supports round/square minimaps. Left-click opens Move UI; right-click opens Add-on Tools; `/movetools` is the chat fallback.
+## Add-on Tools and minimap launcher
 
-When Move UI is loaded, its panel replaces the standalone BigCursor and LocalClock minimap bubbles. Move UI hides those two buttons at runtime only. The BigCursor and LocalClock source files and standalone addon packages are not changed. BigCursor remains outside the movable-frame list, and LocalClock's existing frame integration is preserved.
+- Left-click the Move UI minimap bubble to open the main Move UI window.
+- Right-click the bubble to open Add-on Tools; `/movetools` is also available.
+- Drag the bubble around the minimap. Its position is saved and supports round and square minimap layouts.
+- BigCursor is controlled as a cursor utility and is not included in the movable-frame list.
+- LocalClock retains its existing Move UI frame integration.
+- When Move UI is loaded, its unified launcher replaces the standalone BigCursor and LocalClock minimap bubbles. Their addon files and standalone packages remain unchanged.
 
-This branch is a test build and has not been verified in-game.
+## Packaging
+
+Test and release ZIPs use the same clean internal structure: one top-level `MoveUI` folder containing only the six runtime addon files. Repository documentation, changelogs, workflows, and other development files are not included in install ZIPs.
