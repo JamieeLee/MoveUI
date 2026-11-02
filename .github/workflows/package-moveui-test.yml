@@ -1,0 +1,70 @@
+name: Package Move UI test ZIP
+
+on:
+  push:
+    branches:
+      - feature/addon-tools-integration
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Assemble full addon folder
+        shell: bash
+        run: |
+          mkdir -p package/MoveUI
+          cp MoveUI.toc MoveAnything.lua MoveAnything.xml MoveAnythingGrid.lua MAPredefinedFrames.lua MoveUIAddonTools.lua package/MoveUI/
+          cp README_Move_UI.txt CHANGELOG_1.2.8.txt package/MoveUI/
+          cat > package/MoveUI/INSTALL.txt <<'EOF'
+          MOVE UI 1.2.8 - ADD-ON TOOLS TEST 2
+
+          CLEAN INSTALL
+          1. Close Azeroth Survivors.
+          2. Extract this archive.
+          3. Copy the included MoveUI folder into:
+             Azeroth Survivors/Interface/AddOns/
+          4. Confirm the final path is:
+             Interface/AddOns/MoveUI/MoveUI.toc
+          5. Start the game and enable Move UI if needed.
+
+          CONTROLS
+          - /move opens the original Move UI options window.
+          - Left-click the MU minimap bubble to open/close Move UI.
+          - Right-click the MU bubble to open Add-on Tools.
+          - Drag the MU bubble around the minimap; its angle is saved.
+          - /movetools opens Add-on Tools from chat.
+
+          INTEGRATED ADD-ONS
+          - When Move UI is loaded, its combined Add-on Tools panel replaces
+            the standalone BigCursor and LocalClock minimap bubbles.
+          - BigCursor and LocalClock source files and standalone packages are
+            unchanged. Their own minimap bubbles remain available when Move UI
+            is not installed/enabled.
+          - BigCursor controls and LocalClock Options/Clock Tools are available
+            from the Move UI Add-on Tools panel.
+          - LocalClock's clock frame and alarm warning retain their existing
+            Move UI frame-list integration.
+
+          This is an in-game test build. It has not been verified in the game
+          runtime by the developer.
+          EOF
+
+      - name: Create ZIP
+        run: |
+          cd package
+          zip -qr ../MoveUI-1.2.8-Addon-Tools-Test2-Full.zip MoveUI
+
+      - name: Upload ZIP artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoveUI-1.2.8-Addon-Tools-Test2-Full
+          path: MoveUI-1.2.8-Addon-Tools-Test2-Full.zip
+          if-no-files-found: error
+          retention-days: 7
