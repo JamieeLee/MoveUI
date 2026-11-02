@@ -1,6 +1,6 @@
 ## Interface: 11200
 ## Title: Move UI
-## Notes: Move UI positioning tool for Azeroth Survivors, with movable run timer, boss countdown, independent LocalClock support, and managed Raid Warnings.
+## Notes: Move UI positioning tool for Azeroth Survivors, with run timer, LocalClock integration, and optional BigCursor and LocalClock controls.
 ## Author: JamieLinux
 ## Version: 1.2.8
 ## SavedVariables: MoveAnything_CustomFrames, MoveAnything_CharacterSettings, MoveAnything_UseCharacterSettings
