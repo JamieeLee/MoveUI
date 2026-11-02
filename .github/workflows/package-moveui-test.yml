@@ -1,0 +1,56 @@
+name: Package Move UI
+
+on:
+  push:
+    branches:
+      - feature/addon-tools-integration
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Assemble clean addon folder
+        shell: bash
+        run: |
+          mkdir -p dist/MoveUI
+          cp MoveUI.toc MoveAnything.lua MoveAnything.xml MoveAnythingGrid.lua MAPredefinedFrames.lua MoveUIAddonTools.lua dist/MoveUI/
+          test "$(find dist/MoveUI -maxdepth 1 -type f | wc -l)" -eq 6
+
+      - name: Create test ZIP
+        if: startsWith(github.ref, 'refs/heads/')
+        run: |
+          cd dist
+          zip -qr ../MoveUI-1.2.9-Test.zip MoveUI
+
+      - name: Upload test ZIP to GitHub Actions
+        if: startsWith(github.ref, 'refs/heads/')
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoveUI-1.2.9-Test
+          path: MoveUI-1.2.9-Test.zip
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Create release ZIP
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          cd dist
+          zip -qr "../MoveUI-${VERSION}.zip" MoveUI
+
+      - name: Publish GitHub Release asset
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Move UI ${{ github.ref_name }}
+          generate_release_notes: true
+          files: MoveUI-*.zip

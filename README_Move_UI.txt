@@ -1,5 +1,5 @@
 MOVE UI — AZEROTH SURVIVORS
-Build 1.2.8
+Build 1.2.9
 
 OVERVIEW
 Move UI is a lightweight frame-positioning tool adapted from the legacy MoveAnything addon for the WoW-client-derived UI used by Azeroth Survivors. It keeps the game's existing UI intact and focuses on moving supported frames and complete UI assemblies.
@@ -118,3 +118,16 @@ Version 1.2.7 - Raid Warning mover
 
 
 1.2.8: Added the LocalClock Alarm Warning mover. Install LocalClock 1.3.2 or newer to provide the named frame. The regular Raid Warning mover still controls native RaidWarningFrame messages.
+
+
+ADD-ON TOOLS / MINIMAP BUBBLE TEST — 1.2.8-Tools-Test2
+- Adds one Move UI minimap bubble with the same classic tracking-ring appearance and angle-based drag behavior used by BigCursor and LocalClock.
+- The Move UI bubble can be dragged around round or square minimaps. Its angle is saved in MoveUIDB and restored on reload.
+- Left-click the Move UI bubble to open the main Move UI options window.
+- Right-click the Move UI bubble to open the Add-on Tools panel.
+- /movetools is a chat-command fallback for Add-on Tools.
+- Add-on Tools exposes BigCursor enable/disable/settings and LocalClock Options/Clock Tools.
+- When Move UI is loaded, its combined panel replaces the standalone BigCursor and LocalClock minimap bubbles. Move UI hides and disables those two bubble frames at runtime; it does not modify either addon's files or standalone package.
+- The LocalClock display, native clock surround, alarm warning frame, and existing managed-frame integration remain separate and unchanged.
+- BigCursor remains a cursor utility and is not added to the movable-frame list.
+- This is a test build intended for in-game verification.
