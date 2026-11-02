@@ -50,6 +50,7 @@ Interface/
         ├── MoveAnything.lua
         ├── MoveAnything.xml
         ├── MoveAnythingGrid.lua
+        ├── MoveUIAddonTools.lua
         └── MAPredefinedFrames.lua
 ```
 
@@ -60,7 +61,6 @@ Move UI is still being adapted to Azeroth Survivors' interface. Current areas fo
 - **Frame layering:** Some character and enemy frames can appear underneath the alignment grid.
 - **Toolbar alignment:** Reset positions and default toolbar geometry need further verification against Azeroth Survivors' original UI.
 - **Frame compatibility:** Some legacy frame entries may require additional auditing.
-- **Future clock feature:** A clock using the game's supported time functions may be explored in a future update. A clock is not currently implemented as a Move UI feature.
 
 These issues are being tracked as development continues.
 
