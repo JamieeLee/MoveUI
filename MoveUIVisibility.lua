@@ -2,7 +2,7 @@
 -- Hide/show integration, LocalClock visibility notifications, and options refresh/reset behavior.
 -- Extracted from the tested 1.2.9 runtime; behavior intentionally preserved.
 
-local function MoveUI_DisplayFrameName(frameName)
+function MoveUI_DisplayFrameName(frameName)
 	-- Presentation-only alias: internal WoW/MoveAnything frame names stay unchanged.
 	if (not frameName) then return ""; end
 	if (string.sub(frameName, 1, 2) == "MA") then

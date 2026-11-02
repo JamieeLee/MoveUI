@@ -20,7 +20,7 @@ function MoveAnything_Move( moveFrameName, helpfulName )
 	if( MoveAnything_MoveOnlyWhenVisible[ moveFrameName ] ) then
 		local frame = getglobal( moveFrameName );
 		if( frame == nil or not frame:IsVisible() ) then
-			Error( "That window may only be moved when it is visible" );
+			MoveUI_Error( "That window may only be moved when it is visible" );
 			return;
 		end
 	end
@@ -28,9 +28,9 @@ function MoveAnything_Move( moveFrameName, helpfulName )
 	if( not MoveAnything_FindMAFrame( moveFrameName ) ) then
 		local frame = MoveAnything_FindAvailableFrame();
 		if( frame == nil ) then
-			Error( "You can only move "..MOVEANYTHING_MOVEATONETIME.." frames at once." );
+			MoveUI_Error( "You can only move "..MOVEANYTHING_MOVEATONETIME.." frames at once." );
 		elseif( getglobal( moveFrameName ) == nil ) then
-			Error( "\""..moveFrameName.."\" is not a valid frame name." );
+			MoveUI_Error( "\""..moveFrameName.."\" is not a valid frame name." );
 		else
 			local moveFrame = getglobal( moveFrameName );
 			MoveAnything_AddFrameToMovableList( moveFrameName, helpfulName );

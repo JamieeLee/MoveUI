@@ -22,6 +22,10 @@ function Print(msg, r, g, b, frame)
 	end
 end
 
+function MoveUI_Error(msg)
+    Print(msg, 1.0, 0.2, 0.2)
+end
+
 function table.find( table, value )
 	for i, v in table do
 		if( v == value ) then

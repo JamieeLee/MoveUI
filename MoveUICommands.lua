@@ -2,10 +2,6 @@
 -- Slash command handlers and legacy game-menu insertion callback.
 -- Extracted from the tested 1.2.9 runtime; behavior intentionally preserved.
 
-local function Error(msg)
-    Print(msg, 1.0, 0.2, 0.2)
-end
-
 SLASH_MOVEANYTHING1 = "/move"
 SlashCmdList["MOVEANYTHING"] = function( msg )
 	if( msg == nil or string.len( msg ) == 0 ) then
@@ -29,14 +25,14 @@ end
 SLASH_MOVEANYTHINGCOPYSETTINGS1 = "/movecopy"
 SlashCmdList["MOVEANYTHINGCOPYSETTINGS"] = function( msg )
 	if( msg == nil or string.len( msg ) == 0 ) then
-		Error( "Syntax: /movecopy ServerName PlayerName" );
-		Error( "Use /movelist to see a current list of valid settings" );
+		MoveUI_Error( "Syntax: /movecopy ServerName PlayerName" );
+		MoveUI_Error( "Use /movelist to see a current list of valid settings" );
 		return;
 	end
 
 	if( MoveAnything_CharacterSettings[msg] == nil ) then
-		Error( "No settings for server/character "..msg );
-		Error( "Use /movelist to see a current list of valid settings" );
+		MoveUI_Error( "No settings for server/character "..msg );
+		MoveUI_Error( "Use /movelist to see a current list of valid settings" );
 		return;
 	end
 
@@ -60,14 +56,14 @@ SLASH_MOVEANYTHINGDELETESETTINGS1 = "/movedelete"
 SLASH_MOVEANYTHINGDELETESETTINGS2 = "/movedel"
 SlashCmdList["MOVEANYTHINGDELETESETTINGS"] = function( msg )
 	if( msg == nil or string.len( msg ) == 0 ) then
-		Error( "Syntax: /movedelete ServerName PlayerName" );
-		Error( "Use /movelist to see a current list of valid settings" );
+		MoveUI_Error( "Syntax: /movedelete ServerName PlayerName" );
+		MoveUI_Error( "Use /movelist to see a current list of valid settings" );
 		return;
 	end
 
 	if( MoveAnything_CharacterSettings[msg] == nil ) then
-		Error( "No settings for server/character "..msg );
-		Error( "Use /movelist to see a current list of valid settings" );
+		MoveUI_Error( "No settings for server/character "..msg );
+		MoveUI_Error( "Use /movelist to see a current list of valid settings" );
 		return;
 	end
 
