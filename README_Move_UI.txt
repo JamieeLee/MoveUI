@@ -1,5 +1,5 @@
 MOVE UI — AZEROTH SURVIVORS
-Build 1.2.8
+Build 1.2.9
 
 OVERVIEW
 Move UI is a lightweight frame-positioning tool adapted from the legacy MoveAnything addon for the WoW-client-derived UI used by Azeroth Survivors. It keeps the game's existing UI intact and focuses on moving supported frames and complete UI assemblies.
