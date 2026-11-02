@@ -222,5 +222,90 @@ function MoveUI_CreateAddonTools()
     end
 end
 
--- MoveAnything.xml and the MAOptions frame load before this file through the TOC.
-if MAOptions then MoveUI_CreateAddonTools() end
+
+local function MoveUI_ToggleAddonTools(anchorToMinimap)
+    CreateAddonToolsPanel()
+    if not addonToolsFrame then return end
+
+    if addonToolsFrame:IsShown() then
+        addonToolsFrame:Hide()
+        return
+    end
+
+    addonToolsFrame:ClearAllPoints()
+    if anchorToMinimap and Minimap then
+        addonToolsFrame:SetPoint("TOPRIGHT", Minimap, "BOTTOMLEFT", -8, -8)
+    elseif MAOptions and MAOptions:IsShown() then
+        addonToolsFrame:SetPoint("TOPLEFT", MAOptions, "TOPRIGHT", 6, -42)
+    else
+        addonToolsFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 0)
+    end
+    UpdateAddonTools()
+    addonToolsFrame:Show()
+end
+
+function MoveUI_CreateMinimapButton()
+    if not CreateFrame or not Minimap then return end
+    if MoveUIMinimapButton then return end
+
+    local button = CreateFrame("Button", "MoveUIMinimapButton", Minimap)
+    button:SetWidth(31)
+    button:SetHeight(31)
+    button:SetFrameStrata("MEDIUM")
+    button:SetFrameLevel(Minimap:GetFrameLevel() + 5)
+    button:SetPoint("TOPLEFT", Minimap, "TOPLEFT", -5, -5)
+    button:EnableMouse(true)
+    button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+
+    local icon = button:CreateTexture("MoveUIMinimapButtonIcon", "BACKGROUND")
+    icon:SetTexture("Interface\\Icons\\INV_Misc_Gear_01")
+    icon:SetWidth(20)
+    icon:SetHeight(20)
+    icon:SetPoint("CENTER", button, "CENTER", 0, 0)
+
+    local border = button:CreateTexture("MoveUIMinimapButtonBorder", "OVERLAY")
+    border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+    border:SetWidth(54)
+    border:SetHeight(54)
+    border:SetPoint("CENTER", button, "CENTER", 0, 0)
+
+    button:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+    button:SetScript("OnClick", function()
+        if arg1 == "RightButton" then
+            MoveUI_ToggleAddonTools(true)
+        elseif MoveAnything_ToggleOptionsMenu then
+            MoveAnything_ToggleOptionsMenu()
+        elseif MAOptions then
+            MAOptions:Show()
+        end
+    end)
+    button:SetScript("OnEnter", function()
+        if not GameTooltip then return end
+        GameTooltip:SetOwner(this, "ANCHOR_LEFT")
+        GameTooltip:SetText("Move UI")
+        GameTooltip:AddLine("Left-click: Open Move UI")
+        GameTooltip:AddLine("Right-click: Add-on Tools")
+        GameTooltip:Show()
+    end)
+    button:SetScript("OnLeave", function()
+        if GameTooltip then GameTooltip:Hide() end
+    end)
+    button:Show()
+end
+
+SLASH_MOVEUITOOLS1 = "/movetools"
+SlashCmdList["MOVEUITOOLS"] = function()
+    MoveUI_ToggleAddonTools(false)
+end
+
+-- The XML creates MAOptions after its embedded scripts are read. Wait until
+-- PLAYER_LOGIN, when the complete UI tree and minimap are available, before
+-- attaching our optional controls. This keeps the core Move UI load path intact.
+local MoveUIAddonToolsBootstrap = CreateFrame("Frame")
+MoveUIAddonToolsBootstrap:RegisterEvent("PLAYER_LOGIN")
+MoveUIAddonToolsBootstrap:SetScript("OnEvent", function()
+    if MAOptions then MoveUI_CreateAddonTools() end
+    MoveUI_CreateMinimapButton()
+    MoveUIAddonToolsBootstrap:UnregisterEvent("PLAYER_LOGIN")
+end)
+
