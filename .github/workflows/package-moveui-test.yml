@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - feature/addon-tools-integration
+      - refactor/modular-architecture
     tags:
       - "v*"
 
@@ -21,21 +22,27 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist/MoveUI
-          cp MoveUI.toc MoveAnything.lua MoveAnything.xml MoveAnythingGrid.lua MAPredefinedFrames.lua MoveUIAddonTools.lua dist/MoveUI/
-          test "$(find dist/MoveUI -maxdepth 1 -type f | wc -l)" -eq 6
+          cp MoveUI.toc MoveAnything.xml MoveAnything.lua MoveUIFrameCatalog.lua MoveUIRunClock.lua MAPredefinedFrames.lua MoveUIFrameRegistry.lua MoveUIMover.lua MoveUIVisibility.lua MoveUICompatibilityHooks.lua MoveUICommands.lua MoveAnythingGrid.lua MoveUIAddonTools.lua MoveUIMinimapButton.lua MoveUIAddonIntegration.lua dist/MoveUI/
+          test "$(find dist/MoveUI -maxdepth 1 -type f | wc -l)" -eq 15
 
       - name: Create test ZIP
+        id: test_zip
         if: startsWith(github.ref, 'refs/heads/')
+        shell: bash
         run: |
+          VERSION="$(awk '/^## Version:/ { print $3 }' MoveUI.toc)"
+          VERSION="${VERSION%-dev}"
+          ARCHIVE="MoveUI-${VERSION}-Refactor-Test.zip"
           cd dist
-          zip -qr ../MoveUI-1.2.9-Test.zip MoveUI
+          zip -qr "../${ARCHIVE}" MoveUI
+          echo "archive_name=${ARCHIVE}" >> "$GITHUB_OUTPUT"
 
       - name: Upload test ZIP to GitHub Actions
         if: startsWith(github.ref, 'refs/heads/')
         uses: actions/upload-artifact@v4
         with:
-          name: MoveUI-1.2.9-Test
-          path: MoveUI-1.2.9-Test.zip
+          name: MoveUI-1.3.0-Refactor-Test
+          path: ${{ steps.test_zip.outputs.archive_name }}
           if-no-files-found: error
           retention-days: 30
 
