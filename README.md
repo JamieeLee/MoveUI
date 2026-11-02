@@ -97,3 +97,11 @@ This project is independently adapted for Azeroth Survivors. It is not an offici
 This project is based on the original MoveAnything addon and has been adapted and modified by Jamie Lee for use with Azeroth Survivors.
 
 Reproduction, redistribution, or incorporation of this addon into other Azeroth Survivors addons or projects must include appropriate credit to both Jamie Lee (Move UI) and the original MoveAnything project and its authors. Please do not use or redistribute this work without preserving the applicable attributions.
+
+### Minimap launcher and Add-on Tools
+- Left-click the Move UI minimap gear to open or close the main Move UI window.
+- Right-click the minimap gear to open Add-on Tools.
+- The Add-on Tools button is also available in the main Move UI window.
+- Use `/movetools` as a chat-command fallback for Add-on Tools.
+- BigCursor is exposed as a utility control only; it is not added to the movable-frame list.
+- LocalClock continues to use its existing Move UI frame integration.
