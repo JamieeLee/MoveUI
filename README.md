@@ -8,9 +8,9 @@ Move UI adapts and modernizes the classic MoveAnything interface for Azeroth Sur
 
 ## Project Status
 
-Move UI 1.2.9 is the latest stable release. The 1.3.0 development branch focuses on reorganizing the runtime into focused modules while preserving the established mover, saved-position, grid, run timer, and LocalClock behavior.
+Move UI 1.3.0 is the latest stable release. This version reorganizes the runtime into focused modules while preserving the established mover, saved-position, grid, run timer, and LocalClock behavior.
 
-For version history, see [CHANGELOG.md](CHANGELOG.md).
+For the complete version history, see the single consolidated [CHANGELOG.md](CHANGELOG.md).
 
 ## Features
 
@@ -79,7 +79,7 @@ These issues are being tracked as development continues.
 
 ## Development
 
-Move UI is being developed incrementally, with changes tested against the actual game wherever possible. Add-on shortcuts remain optional: Move UI detects BigCursor and LocalClock through their slash-command registrations and does not require either addon to be installed.
+Move UI is developed incrementally, with changes tested against the actual game wherever possible. Add-on shortcuts remain optional: Move UI detects BigCursor and LocalClock through their slash-command registrations and does not require either addon to be installed.
 
 Legacy internal identifiers may be retained when changing them could break compatibility. User-facing labels, obsolete menu entries, and documentation are cleaned up separately to reduce unnecessary risk.
 
@@ -100,10 +100,9 @@ Move UI builds upon that foundation with changes tailored to **Azeroth Survivors
 
 This project is independently adapted for Azeroth Survivors. It is not an official release of the original MoveAnything project and is not affiliated with its original developers.
 
-**Credit belongs to the original authors for the work that made this adaptation possible.** Original copyright notices, attribution, and applicable license terms must be retained and respected. 
+**Credit belongs to the original authors for the work that made this adaptation possible.** Original copyright notices, attribution, and applicable license terms must be retained and respected.
 
 **Move UI — a modernized, Azeroth Survivors-focused adaptation of MoveAnything.**
-
 
 **Attribution and Redistribution Notice**
 
@@ -111,16 +110,7 @@ This project is based on the original MoveAnything addon and has been adapted an
 
 Reproduction, redistribution, or incorporation of this addon into other Azeroth Survivors addons or projects must include appropriate credit to both Jamie Lee (Move UI) and the original MoveAnything project and its authors. Please do not use or redistribute this work without preserving the applicable attributions.
 
-### Minimap launcher and Add-on Tools
-- Left-click the Move UI minimap gear to open or close the main Move UI window.
-- Right-click the minimap gear to open Add-on Tools.
-- The Add-on Tools button is also available in the main Move UI window.
-- Use `/movetools` as a chat-command fallback for Add-on Tools.
-- BigCursor is exposed as a utility control only; it is not added to the movable-frame list.
-- LocalClock continues to use its existing Move UI frame integration.
-
-
-## Add-on Tools and minimap launcher
+## Minimap launcher and Add-on Tools
 
 - Left-click the Move UI minimap bubble to open the main Move UI window.
 - Right-click the bubble to open Add-on Tools; `/movetools` is also available.
@@ -131,7 +121,7 @@ Reproduction, redistribution, or incorporation of this addon into other Azeroth 
 
 ## Packaging
 
-Test and release ZIPs use the same clean internal structure: one top-level `MoveUI` folder containing only the six runtime addon files. Repository documentation, changelogs, workflows, and other development files are not included in install ZIPs.
+Test and release ZIPs use the same clean internal structure: one top-level `MoveUI/` folder containing exactly the 15 runtime addon files. Repository documentation, the consolidated changelog, workflows, and other development files are not included in install ZIPs.
 
 ## Source Architecture
 
