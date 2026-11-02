@@ -51,11 +51,20 @@ Interface/
 └── AddOns/
     └── MoveUI/
         ├── MoveUI.toc
-        ├── MoveAnything.lua
         ├── MoveAnything.xml
+        ├── MoveAnything.lua
+        ├── MoveUIFrameCatalog.lua
+        ├── MoveUIRunClock.lua
+        ├── MAPredefinedFrames.lua
+        ├── MoveUIFrameRegistry.lua
+        ├── MoveUIMover.lua
+        ├── MoveUIVisibility.lua
+        ├── MoveUICompatibilityHooks.lua
+        ├── MoveUICommands.lua
         ├── MoveAnythingGrid.lua
         ├── MoveUIAddonTools.lua
-        └── MAPredefinedFrames.lua
+        ├── MoveUIMinimapButton.lua
+        └── MoveUIAddonIntegration.lua
 ```
 
 ## Known Issues
@@ -123,3 +132,21 @@ Reproduction, redistribution, or incorporation of this addon into other Azeroth 
 ## Packaging
 
 Test and release ZIPs use the same clean internal structure: one top-level `MoveUI` folder containing only the six runtime addon files. Repository documentation, changelogs, workflows, and other development files are not included in install ZIPs.
+
+## Source Architecture
+
+The runtime is split into focused modules while retaining the legacy global callbacks required by the 1.12-era XML UI system:
+
+- `MoveAnything.lua`: shared bootstrap and core callbacks.
+- `MoveUIFrameCatalog.lua`: default movers, visibility rules, and state tables.
+- `MoveUIRunClock.lua`: run timer / next-boss HUD replacement.
+- `MoveUIFrameRegistry.lua`: frame discovery, saved settings, registration, and hook protection.
+- `MoveUIMover.lua`: mover lifecycle, positioning, sizing, and options-list interactions.
+- `MoveUIVisibility.lua`: managed-frame visibility and options state.
+- `MoveUICompatibilityHooks.lua`: legacy container, tooltip, UIPanel, talent, and action-bar hooks.
+- `MoveUICommands.lua`: slash commands and game-menu integration.
+- `MoveAnything.xml`: frame templates and options-window layout.
+- `MoveAnythingGrid.lua`: alignment grid and mover integration.
+- `MoveUIAddonTools.lua`, `MoveUIMinimapButton.lua`, and `MoveUIAddonIntegration.lua`: optional addon tools, launcher, and duplicate-button suppression.
+
+The split is organizational: public function names, saved-variable keys, frame names, and legacy XML callbacks remain stable.

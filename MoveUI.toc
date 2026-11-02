@@ -6,3 +6,5 @@
 ## SavedVariables: MoveAnything_CustomFrames, MoveAnything_CharacterSettings, MoveAnything_UseCharacterSettings, MoveUIDB
 MoveAnything.xml
 MoveUIAddonTools.lua
+MoveUIMinimapButton.lua
+MoveUIAddonIntegration.lua
